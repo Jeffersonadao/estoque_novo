@@ -1,4 +1,4 @@
-import 'package:estoque_novo/domain/entities/produto.dart';
+import 'package:estoque_novo/features/estoque/domain/entities/produto.dart';
 
 abstract class ProdutoRepository {
   Future<void> adicionarProduto(Produto produto);
