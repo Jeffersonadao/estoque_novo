@@ -21,11 +21,9 @@ class _AddEditProdutoState extends State<AddEditProduto> {
 
   File? imagemSelecionada;
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(ImageSource source) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-    ); // ou .camera
+    final XFile? pickedFile = await picker.pickImage(source: source);
     if (pickedFile != null) {
       setState(() {
         imagemSelecionada = File(pickedFile.path);
@@ -170,21 +168,67 @@ class _AddEditProdutoState extends State<AddEditProduto> {
 
                     // Botão escolher imagem
                     ElevatedButton.icon(
-                      onPressed: _pickImage,
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          builder:
+                              (context) => Wrap(
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.photo_camera),
+                                    title: const Text("Tirar Foto"),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      _pickImage(ImageSource.camera);
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.photo_library),
+                                    title: const Text("Escolher da Galeria"),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      _pickImage(ImageSource.gallery);
+                                    },
+                                  ),
+                                ],
+                              ),
+                        );
+                      },
                       icon: const Icon(Icons.image),
                       label: const Text("Selecionar Imagem"),
                     ),
                   ],
                 ),
 
-                ElevatedButton(
+                ElevatedButton.icon(
                   onPressed: () {
-                    // Aqui depois vamos salvar no Firestore
-                    debugPrint("Nome: ${nomeController.text}");
-                    debugPrint("Qtd: ${quantidadeController.text}");
-                    debugPrint("Validade: ${validadeController.text}");
+                    showModalBottomSheet(
+                      context: context,
+                      builder:
+                          (context) => Wrap(
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.photo_camera),
+                                title: const Text("Tirar Foto"),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  _pickImage(ImageSource.camera);
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.photo_library),
+                                title: const Text("Escolher da Galeria"),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  _pickImage(ImageSource.gallery);
+                                },
+                              ),
+                            ],
+                          ),
+                    );
                   },
-                  child: const Text("Salvar Produto"),
+                  icon: const Icon(Icons.image),
+                  label: const Text("Selecionar Imagem"),
                 ),
               ],
             ),
