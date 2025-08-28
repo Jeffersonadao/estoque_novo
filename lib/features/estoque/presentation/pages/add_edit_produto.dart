@@ -1,8 +1,11 @@
 import 'dart:io';
 
 import 'package:brasil_fields/brasil_fields.dart';
+import 'package:estoque_novo/features/estoque/domain/entities/produto.dart';
+import 'package:estoque_novo/features/estoque/presentation/controllers/produto_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -19,6 +22,8 @@ class _AddEditProdutoState extends State<AddEditProduto> {
   final TextEditingController validadeController = TextEditingController();
   String unidadeSelecionada = 'un';
 
+  final controller = Get.find<ProdutoController>();
+
   File? imagemSelecionada;
 
   Future<void> _pickImage(ImageSource source) async {
@@ -32,6 +37,21 @@ class _AddEditProdutoState extends State<AddEditProduto> {
   }
 
   String? imagemPath;
+
+  UnidadeMedida converterUnidade(String valor) {
+    switch (valor) {
+      case 'un':
+        return UnidadeMedida.unidade;
+      case 'kg':
+        return UnidadeMedida.quilo;
+      case 'L':
+        return UnidadeMedida.litro;
+      default:
+        return UnidadeMedida
+            .unidade; // padrão para valores que não existem no enum
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -200,35 +220,68 @@ class _AddEditProdutoState extends State<AddEditProduto> {
                   ],
                 ),
 
-                ElevatedButton.icon(
+                SizedBox(height: 20),
+
+                ElevatedButton(
                   onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      builder:
-                          (context) => Wrap(
-                            children: [
-                              ListTile(
-                                leading: const Icon(Icons.photo_camera),
-                                title: const Text("Tirar Foto"),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  _pickImage(ImageSource.camera);
-                                },
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.photo_library),
-                                title: const Text("Escolher da Galeria"),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  _pickImage(ImageSource.gallery);
-                                },
-                              ),
-                            ],
-                          ),
+                    // 1. Pegar valores dos controllers
+                    final nome = nomeController.text;
+                    final quantidadeTexto = quantidadeController.text;
+                    final unidade = converterUnidade(unidadeSelecionada);
+
+                    // 2. Validar campos obrigatórios
+                    if (nome.isEmpty || quantidadeTexto.isEmpty) {
+                      Get.snackbar(
+                        'Erro',
+                        'Preencha todos os campos obrigatórios',
+                      );
+                      return;
+                    }
+
+                    // 3. Converter quantidade para int
+                    final quantidade = int.tryParse(quantidadeTexto);
+                    if (quantidade == null) {
+                      Get.snackbar('Erro', 'Quantidade inválida');
+                      return;
+                    }
+
+                    // 4. Converter validade para DateTime
+                    DateTime? validade;
+                    try {
+                      validade = DateFormat(
+                        'dd/MM/yyyy',
+                      ).parseStrict(validadeController.text);
+                    } catch (e) {
+                      Get.snackbar('Erro', 'Data de validade inválida');
+                      return;
+                    }
+
+                    final hoje = DateTime.now();
+                    if (validade.isBefore(hoje.add(Duration(days: 1)))) {
+                      Get.snackbar(
+                        'Erro',
+                        'A validade deve ser uma data futura',
+                      );
+                      return;
+                    }
+
+                    // 5. Criar objeto Produto
+                    final produto = Produto(
+                      nome: nome,
+                      quantidade: quantidade,
+                      unidadeMedida: unidade,
+                      unidadeOriginal: unidadeSelecionada,
+                      validade: validade,
+                      imagemPath: imagemSelecionada?.path,
                     );
+
+                    // 6. Chamar o controller para adicionar
+                    controller.adicionarProduto(produto);
+
+                    // 7. Fechar a tela e voltar para a Home
+                    Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.image),
-                  label: const Text("Selecionar Imagem"),
+                  child: const Text('Salvar Produto'),
                 ),
               ],
             ),

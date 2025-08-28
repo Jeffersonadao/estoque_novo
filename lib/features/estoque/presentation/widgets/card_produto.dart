@@ -1,8 +1,25 @@
-import 'package:estoque_novo/features/estoque/presentation/widgets/image_card_widget.dart';
+import 'dart:io';
+
+import 'package:estoque_novo/features/estoque/domain/entities/produto.dart';
 import 'package:flutter/material.dart';
 
 class CardProduto extends StatelessWidget {
-  const CardProduto({super.key});
+  final Produto produto; // 🟢 receber produto
+
+  const CardProduto({super.key, required this.produto});
+
+  String unidadeParaString(UnidadeMedida unidade, String? unidadeOriginal) {
+    switch (unidade) {
+      case UnidadeMedida.unidade:
+        if (unidadeOriginal == 'g') return 'gr';
+        if (unidadeOriginal == 'ml') return 'ml';
+        return 'un';
+      case UnidadeMedida.quilo:
+        return 'kg';
+      case UnidadeMedida.litro:
+        return 'L';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,10 +29,20 @@ class CardProduto extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(12.0),
-            child: ImageCardWidget(),
+            child:
+                produto.imagemPath != null
+                    ? Image.file(
+                      File(produto.imagemPath!),
+                      height: 110,
+                      width: 100,
+                      fit: BoxFit.cover,
+                    )
+                    : const Icon(
+                      Icons.image_not_supported,
+                      size: 100,
+                      color: Colors.grey,
+                    ),
           ),
-
-          // SizedBox(width: 10),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -23,14 +50,17 @@ class CardProduto extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Nome do Produto",
+                    produto.nome,
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
-                  Text("Quantidade: 2Kg"),
-                  Text("Validade: 25/10/2025"),
+                  Text(
+                    "Quantidade: ${produto.quantidade} ${unidadeParaString(produto.unidadeMedida, produto.unidadeOriginal)}",
+                  ),
 
+                  Text(
+                    "Validade: ${produto.validade!.day.toString().padLeft(2, '0')}/${produto.validade!.month.toString().padLeft(2, '0')}/${produto.validade!.year}",
+                  ),
                   SizedBox(height: 5),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
